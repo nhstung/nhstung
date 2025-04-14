@@ -1,0 +1,326 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Ghi Chú Anime - Có Nhạc và Hoa Anh Đào</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', 'Arial', sans-serif;
+      background-image: url('https://i.imgur.com/HPsqjds.jpeg');
+background-size: 100% auto;
+  background-position: center top;
+background-position: center;
+background-repeat: no-repeat;
+      margin: 20px;
+      color: #444;
+      transition: background 0.5s, color 0.5s;
+      overflow: hidden;
+      position: relative;
+    }
+    h1 {
+      text-align: center;
+      color: #ff69b4;
+      font-size: 2.5em;
+    }
+    .note-input {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    input {
+      padding: 10px;
+      width: 60%;
+      border: 2px solid #ff69b4;
+      border-radius: 10px;
+      margin-right: 10px;
+      font-size: 1em;
+    }
+    button {
+      background-color: #ff69b4;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1em;
+      margin: 5px;
+    }
+    button:hover {
+      background-color: #ff85c1;
+    }
+    .note {
+      background: #fff;
+      margin: 10px auto;
+      padding: 15px;
+      border-radius: 10px;
+      width: 60%;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      position: relative;
+      font-size: 1.1em;
+      display: flex;
+      align-items: center;
+    }
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    .btn-group {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+    }
+    .edit-btn, .delete-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1em;
+      margin-left: 8px;
+    }
+    .edit-btn {
+      color: #ffa500;
+    }
+    .delete-btn {
+      color: red;
+    }
+    .toggle-mode, .play-music {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #ff69b4;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .play-music {
+      top: 70px;
+      right: 20px;
+    }
+    .flower {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-image: url('https://i.imgur.com/lkZC3Dk.png');
+      background-size: 100% auto;
+  background-position: center top;
+      animation: fall 10s linear infinite;
+      pointer-events: none;
+      z-index: 2;
+    }
+    @keyframes fall {
+      0% { transform: translateY(-50px) rotate(0deg); }
+      100% { transform: translateY(100vh) rotate(360deg); }
+    }
+    #fireworks {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+  </style>
+</head>
+
+<body>
+
+<button class="toggle-mode" onclick="toggleMode()">Chuyển chế độ</button>
+<button class="play-music" onclick="playMusic()">Bật nhạc</button>
+
+<h1>Ghi Chú Dễ Thương</h1>
+
+<div class="note-input">
+  <input type="text" id="noteInput" placeholder="Viết ghi chú tại đây..." />
+  <button onclick="addNote()">Lưu</button>
+</div>
+
+<div id="notesList"></div>
+
+<audio id="bgMusic" src="https://files.catbox.moe/n6akcw.mp3" loop></audio>
+
+<canvas id="fireworks"></canvas>
+
+<script>
+  let editingIndex = -1;
+  let darkMode = false;
+
+  function addNote() {
+    const noteInput = document.getElementById('noteInput');
+    const noteText = noteInput.value.trim();
+    if (noteText === '') {
+      alert('Vui lòng nhập ghi chú!');
+      return;
+    }
+
+    const notes = getNotes();
+
+    if (editingIndex === -1) {
+      notes.push(noteText);
+    } else {
+      notes[editingIndex] = noteText;
+      editingIndex = -1;
+    }
+
+    saveNotes(notes);
+    
+document.getElementById('noteInput').addEventListener('focus', function() {
+  const music = document.getElementById('bgMusic');
+  if (music.paused) {
+    music.play();
+    document.querySelector('.play-music').innerText = 'Tắt nhạc';
+  }
+});
+
+  renderNotes();
+    noteInput.value = '';
+
+    launchFireworks();
+  }
+
+  function getNotes() {
+    const notes = localStorage.getItem('notes');
+    return notes ? JSON.parse(notes) : [];
+  }
+
+  function saveNotes(notes) {
+    localStorage.setItem('notes', JSON.stringify(notes));
+  }
+
+  function renderNotes() {
+    const notesList = document.getElementById('notesList');
+    notesList.innerHTML = '';
+
+    const notes = getNotes();
+    notes.forEach((note, index) => {
+      const noteDiv = document.createElement('div');
+      noteDiv.className = 'note';
+      noteDiv.innerHTML = `
+        <img src="https://i.imgur.com/lkZC3Dk.png" class="avatar" alt="Hoa Anh Đào">
+        ${note}
+        <div class="btn-group">
+          <button class="edit-btn" onclick="editNote(${index})">✏️</button>
+          <button class="delete-btn" onclick="deleteNote(${index})">🗑️</button>
+        </div>
+      `;
+      notesList.appendChild(noteDiv);
+    });
+  }
+
+  function deleteNote(index) {
+    const notes = getNotes();
+    notes.splice(index, 1);
+    saveNotes(notes);
+    
+document.getElementById('noteInput').addEventListener('focus', function() {
+  const music = document.getElementById('bgMusic');
+  if (music.paused) {
+    music.play();
+    document.querySelector('.play-music').innerText = 'Tắt nhạc';
+  }
+});
+
+  renderNotes();
+  }
+
+  function editNote(index) {
+    const notes = getNotes();
+    const noteInput = document.getElementById('noteInput');
+    noteInput.value = notes[index];
+    editingIndex = index;
+  }
+
+  function toggleMode() {
+    darkMode = !darkMode;
+    document.body.style.background = darkMode ? '#1e1e1e' : 'linear-gradient(to right, #f9e0f7, #e0f7fa)';
+    document.body.style.color = darkMode ? '#eee' : '#444';
+  }
+
+  function createFlower() {
+    const flower = document.createElement('div');
+    flower.className = 'flower';
+    flower.style.left = Math.random() * window.innerWidth + 'px';
+    document.body.appendChild(flower);
+
+    setTimeout(() => flower.remove(), 10000);
+  }
+  setInterval(createFlower, 500);
+
+  const canvas = document.getElementById('fireworks');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  function launchFireworks() {
+    let particles = [];
+
+    for (let i = 0; i < 100; i++) {
+      particles.push({
+        x: canvas.width/2,
+        y: canvas.height/2,
+        speedX: Math.random() * 6 - 3,
+        speedY: Math.random() * 6 - 3,
+        radius: Math.random() * 3 + 2,
+        color: `hsl(${Math.random() * 360}, 100%, 70%)`,
+        life: 100
+      });
+    }
+
+    function animate() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      particles.forEach((p, index) => {
+        p.x += p.speedX;
+        p.y += p.speedY;
+        p.life--;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+
+        if (p.life <= 0) {
+          particles.splice(index, 1);
+        }
+      });
+
+      if (particles.length > 0) {
+        requestAnimationFrame(animate);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    animate();
+  }
+
+  function playMusic() {
+    const music = document.getElementById('bgMusic');
+    if (music.paused) {
+      music.play();
+      document.querySelector('.play-music').innerText = 'Tắt nhạc';
+    } else {
+      music.pause();
+      document.querySelector('.play-music').innerText = 'Bật nhạc';
+    }
+  }
+
+  
+document.getElementById('noteInput').addEventListener('focus', function() {
+  const music = document.getElementById('bgMusic');
+  if (music.paused) {
+    music.play();
+    document.querySelector('.play-music').innerText = 'Tắt nhạc';
+  }
+});
+
+  renderNotes();
+</script>
+
+</body>
+</html>
